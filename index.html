@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Property Simulator - Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 400px;
+            height: 600px;
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #4a90e2;
+            color: white;
+            padding: 16px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            max-width: 85%;
+        }
+        .message.agent {
+            align-self: flex-start;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ccc;
+            background-size: cover;
+            background-position: center;
+        }
+        .agent .avatar {
+            background-image: url('https://i.pravatar.cc/40?u=emily' ); /* Placeholder image */
+        }
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 20px;
+            line-height: 1.5;
+        }
+        .agent .message-bubble {
+            background-color: #e9e9eb;
+            color: #000;
+            border-top-left-radius: 4px;
+        }
+        .user-options {
+            padding: 10px 20px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .option-button {
+            background-color: #f0f2f5;
+            border: 1px solid #dcdfe6;
+            border-radius: 20px;
+            padding: 12px 16px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+            transition: background-color 0.2s;
+        }
+        .option-button:hover {
+            background-color: #e4e6eb;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        Global Property Simulator
+    </div>
+    <div class="chat-messages" id="chat-messages">
+        <!-- Messages will be added here by JavaScript -->
+    </div>
+    <div class="user-options" id="user-options">
+        <!-- Options will be added here by JavaScript -->
+    </div>
+</div>
+
+<script>
+    // ▼▼▼ ここからがJavaScriptのコード ▼▼▼
+    const chatMessages = document.getElementById('chat-messages');
+    const userOptions = document.getElementById('user-options');
+
+    // シナリオのデータを定義します
+    const scenario = {
+        start: {
+            agentMessages: [
+                "Hi there! 私の名前はエミリー。カリフォルニア州公認の不動産エージェントよ。あなたがアメリカで理想の家を見つける旅のパートナーを務めるわ！夢のカリフォルニアライフ、一緒に実現させましょう！",
+                "アメリカでの不動産購入は、日本とは少し違うユニークな冒険になるはず。でも心配しないで、私がしっかりガイドするから！エスクローやディスクロージャーについても、分かりやすく説明するわね。",
+                "さっそく始めたいところだけど、まずはあなたのことを少し教えてくれる？あなたにピッタリのプランを立てるために、いくつか質問させてもらうわね。"
+            ],
+            options: [
+                { text: "OK！よろしくね、エミリー！", next: "ask_budget" },
+                { text: "エスクローって何のこと？", next: "explain_escrow" },
+                { text: "始める前に、手数料について教えてほしいな。", next: "explain_fees" }
+            ]
+        },
+        explain_escrow: {
+            agentMessages: [
+                "良い質問ね！エスクローは、アメリカの不動産取引で『信頼』を担保するとても重要な仕組みよ。",
+                "簡単に言うと、買い手と売り手の間に立つ『中立な第三者機関』のこと。買い手が支払った代金や手付金を、取引が完了するまでエスクローが安全に預かってくれるの。家の権利証などもね。",
+                "これにより、売り手は『代金が支払われないかも』という心配がなくなり、買い手は『お金を払ったのに家の権利がもらえない』というリスクを防げるのよ。まさに『信頼の形』の一つね！理解できたかしら？"
+            ],
+            options: [
+                { text: "なるほど、よくわかった！", next: "ask_budget" },
+                { text: "もう少し詳しく知りたいな。", next: "explain_escrow_deep" }
+            ]
+        },
+        explain_fees: {
+            agentMessages: [
+                "もちろん！お金の話はとても重要だものね。アメリカの不動産購入では、物件価格とは別に『クロージングコスト』がかかるわ。",
+                "これには、エスクロー手数料、物件調査費用、登記費用、弁護士費用などが含まれていて、一般的に物件価格の2%〜5%が目安よ。例えば、50万ドルの物件なら、1万ドルから2万5千ドルくらいね。",
+                "ちなみに、私たち不動産エージェントへの仲介手数料は、多くの場合『売り手』が支払う仕組みになっているの。これも日本との大きな違いの一つね！"
+            ],
+            options: [
+                { text: "ありがとう！勉強になるな。", next: "ask_budget" },
+                { text: "売り手が手数料を払うんだ！面白いね。", next: "ask_budget" }
+            ]
+        },
+        ask_budget: {
+            agentMessages: [
+                "じゃあ、最初のステップに進みましょう！あなたの希望の予算（自己資金と借入額の合計）は、だいたいどれくらいを考えている？"
+            ],
+            options: [
+                { text: "50万ドルくらいかな", next: "end_demo" },
+                { text: "80万ドルくらいで考えてる", next: "end_demo" },
+                { text: "まだ具体的には…", next: "end_demo" }
+            ]
+        },
+        explain_escrow_deep: {
+            agentMessages: ["（ここではさらに詳細なエスクローの説明が続きます...デモはここまでです）"],
+            options: [{ text: "デモを終了する", next: "end_demo" }]
+        },
+        end_demo: {
+            agentMessages: ["回答ありがとう！ここから、あなたの予算に合った物件を検索したり、ローンの事前審査に進んだりするの。シミュレーションのデモはここまでよ。一緒に素晴らしいアプリを作っていきましょう！"],
+            options: []
+        }
+    };
+
+    function addAgentMessage(text) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message agent';
+        messageDiv.innerHTML = `<div class="avatar"></div><div class="message-bubble">${text}</div>`;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showUserOptions(options) {
+        userOptions.innerHTML = '';
+        if (!options) return;
+        options.forEach(option => {
+            const button = document.createElement('button');
+            button.className = 'option-button';
+            button.textContent = option.text;
+            button.onclick = () => selectOption(option);
+            userOptions.appendChild(button);
+        });
+    }
+
+    function selectOption(option) {
+        loadScenario(option.next);
+    }
+
+    async function loadScenario(scenarioKey) {
+        const currentScene = scenario[scenarioKey];
+        if (!currentScene) {
+            console.error("Scenario not found:", scenarioKey);
+            return;
+        }
+        userOptions.innerHTML = '';
+        for (const message of currentScene.agentMessages) {
+            addAgentMessage(message);
+            await new Promise(resolve => setTimeout(resolve, 1200));
+        }
+        showUserOptions(currentScene.options);
+    }
+
+    loadScenario('start');
+    // ▲▲▲ ここまでがJavaScriptのコード ▲▲▲
+</script>
+
+</body>
+</html>
